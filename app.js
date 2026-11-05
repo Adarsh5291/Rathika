@@ -5,6 +5,7 @@ const errorHandler = require("./middleware/errorHandler");
 const bikeRoutes = require("./routes/bikeRoutes");
 const authRoutes = require("./routes/authRoutes");
 const session = require("express-session");
+const bookingRoutes = require("./routes/bookingRoutes");
 
 dotenv.config();
 
@@ -35,6 +36,8 @@ app.get("/", (req, res) => {
 });
 
 app.use("/bikes", bikeRoutes);
+
+app.use("/bookings", bookingRoutes);
 
 app.use(errorHandler);
 

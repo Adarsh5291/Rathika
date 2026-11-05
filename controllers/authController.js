@@ -1,4 +1,5 @@
 const bcrypt = require("bcrypt");
+const Booking = require("../models/Booking");
 const User = require("../models/User");
 
 const showLoginForm = (req, res) => {
@@ -47,7 +48,22 @@ const showDashboard = async (req, res) => {
         return res.status(404).send("User not found");
     }
 
-    res.render("dashboard", { user });
+    // Fetch bookings made by the logged-in user
+    const bookings = await Booking.find({
+        user: req.session.userId
+    })
+        .populate({
+            path: "bikeUnit",
+            populate: {
+                path: "bike"
+            }
+        })
+        .sort({ createdAt: -1 });
+
+    res.render("dashboard", {
+        user,
+        bookings
+    });
 };
 
 const showRegisterForm = (req, res) => {

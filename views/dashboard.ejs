@@ -22,6 +22,57 @@
 
     <a href="/bikes">Browse Bikes</a>
 
+    <hr>
+
+<h2>My Bookings</h2>
+
+<% if (bookings.length === 0) { %>
+
+    <p>You haven't made any bookings yet.</p>
+
+<% } else { %>
+
+    <% bookings.forEach(booking => { %>
+
+        <div>
+            <h3>
+                <%= booking.bikeUnit.bike.name %>
+            </h3>
+
+            <p>
+                Brand: <%= booking.bikeUnit.bike.brand %>
+            </p>
+
+            <p>
+                Pickup Date:
+                <%= booking.pickupDate.toDateString() %>
+            </p>
+
+            <p>
+                Return Date:
+                <%= booking.returnDate.toDateString() %>
+            </p>
+
+            <p>
+                Total Amount: ₹<%= booking.totalAmount %>
+            </p>
+
+            <p>
+                Booking Status: <%= booking.bookingStatus %>
+            </p>
+
+            <p>
+                Payment Status: <%= booking.paymentStatus %>
+            </p>
+
+        </div>
+
+        <hr>
+
+    <% }) %>
+
+<% } %>
+
     <br><br>
 
     <form action="/logout" method="POST">

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Book <%= bike.name %> - Rathika</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <h1>Book <%= bike.name %></h1>
+
+    <p>Brand: <%= bike.brand %></p>
+
+    <p>Type: <%= bike.type %></p>
+
+    <p>₹<%= bike.pricePerDay %> / day</p>
+
+    <h2>Select Rental Dates</h2>
+
+    <form action="/bookings" method="POST">
+
+        <input
+            type="hidden"
+            name="bikeId"
+            value="<%= bike._id %>"
+        >
+
+        <div>
+            <label for="pickupDate">Pickup Date</label>
+
+            <input
+                type="date"
+                id="pickupDate"
+                name="pickupDate"
+                required
+            >
+        </div>
+
+        <br>
+
+        <div>
+            <label for="returnDate">Return Date</label>
+
+            <input
+                type="date"
+                id="returnDate"
+                name="returnDate"
+                required
+            >
+        </div>
+
+        <br>
+
+        <button type="submit">Continue Booking</button>
+
+    </form>
+
+    <br>
+
+    <a href="/bikes/<%= bike._id %>">
+        ← Back to Bike
+    </a>
+
+</body>
+</html>
