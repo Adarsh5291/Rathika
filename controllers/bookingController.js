@@ -96,7 +96,34 @@ const createBooking = async (req, res) => {
 
 };
 
+const cancelBooking = async (req, res) => {
+    const { bookingId } = req.params;
+
+    // Find a booking belonging to the logged-in user
+    const booking = await Booking.findOne({
+        _id: bookingId,
+        user: req.session.userId
+    });
+
+    if (!booking) {
+        return res.status(404).send("Booking not found");
+    }
+
+    // Only pending or confirmed bookings can be cancelled
+    if (!["Pending", "Confirmed"].includes(booking.bookingStatus)) {
+        return res.status(400).send("This booking cannot be cancelled");
+    }
+
+    // Update booking status
+    booking.bookingStatus = "Cancelled";
+
+    await booking.save();
+
+    res.redirect("/dashboard");
+};
+
 module.exports = {
     showBookingForm,
-    createBooking
+    createBooking,
+    cancelBooking
 };

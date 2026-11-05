@@ -65,6 +65,14 @@
                 Payment Status: <%= booking.paymentStatus %>
             </p>
 
+            <% if (["Pending", "Confirmed"].includes(booking.bookingStatus)) { %>
+
+                <form action="/bookings/<%= booking._id %>/cancel" method="POST">
+                    <button type="submit">Cancel Booking</button>
+                </form>
+
+            <% } %>
+
         </div>
 
         <hr>
