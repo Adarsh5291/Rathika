@@ -4,14 +4,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Add Bike - Rathika</title>
+
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 
     <h1>Add New Bike</h1>
 
-    <form action="/admin/bikes" method="POST">
+    <form
+        action="/admin/bikes"
+        method="POST"
+        enctype="multipart/form-data"
+    >
 
         <input
             type="hidden"
@@ -20,27 +26,47 @@
         >
 
         <label>Bike Name</label>
-        <input type="text" name="name" required>
+        <input
+            type="text"
+            name="name"
+            maxlength="100"
+            required
+        >
 
         <label>Brand</label>
-        <input type="text" name="brand" required>
+        <input
+            type="text"
+            name="brand"
+            maxlength="50"
+            required
+        >
 
         <label>Type</label>
         <select name="type" required>
             <option value="">Select Type</option>
-            <option>Sports</option>
-            <option>Classic</option>
-            <option>Cruiser</option>
-            <option>Adventure</option>
-            <option>Scooter</option>
-            <option>Other</option>
+            <option value="Sports">Sports</option>
+            <option value="Classic">Classic</option>
+            <option value="Cruiser">Cruiser</option>
+            <option value="Adventure">Adventure</option>
+            <option value="Scooter">Scooter</option>
+            <option value="Other">Other</option>
         </select>
 
         <label>Price Per Day (₹)</label>
-        <input type="number" name="pricePerDay" min="1" required>
+        <input
+            type="number"
+            name="pricePerDay"
+            min="1"
+            step="0.01"
+            required
+        >
 
         <label>Description</label>
-        <textarea name="description" required></textarea>
+        <textarea
+            name="description"
+            maxlength="1000"
+            required
+        ></textarea>
 
         <label>Engine</label>
         <input type="text" name="engine">
@@ -51,8 +77,14 @@
         <label>Transmission</label>
         <input type="text" name="transmission">
 
-        <label>Image URL</label>
-        <input type="text" name="image">
+        <label>Bike Image</label>
+        <input
+            type="file"
+            name="image"
+            accept="image/jpeg,image/png,image/webp"
+        >
+
+        <p>Allowed formats: JPG, JPEG, PNG and WebP. Maximum size: 2 MB.</p>
 
         <button type="submit">Add Bike</button>
 

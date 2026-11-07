@@ -1,8 +1,74 @@
+
 const User = require("../models/User");
 const Bike = require("../models/Bike");
 const BikeUnit = require("../models/BikeUnit");
 const Booking = require("../models/Booking");
 const mongoose = require("mongoose");
+
+const { cloudinary } = require("../config/cloudinary");
+
+
+// =====================================================
+// HELPER FUNCTIONS
+// =====================================================
+
+const isValidObjectId = (id) => {
+    return mongoose.Types.ObjectId.isValid(id);
+};
+
+
+const removeCloudinaryImage = async (publicId) => {
+    if (!publicId) return;
+
+    try {
+        await cloudinary.uploader.destroy(publicId);
+    } catch (error) {
+        console.error("Cloudinary image deletion failed:", error);
+    }
+};
+
+
+const cleanupUploadedImage = async (req) => {
+    if (req.file && req.file.filename) {
+        await removeCloudinaryImage(req.file.filename);
+    }
+};
+
+
+const validateBikeInput = (data) => {
+    const {
+        name,
+        brand,
+        type,
+        pricePerDay,
+        description
+    } = data;
+
+    if (
+        !name?.trim() ||
+        !brand?.trim() ||
+        !type?.trim() ||
+        pricePerDay === undefined ||
+        pricePerDay === "" ||
+        !description?.trim()
+    ) {
+        return "Please fill all required fields";
+    }
+
+    if (
+        !Number.isFinite(Number(pricePerDay)) ||
+        Number(pricePerDay) <= 0
+    ) {
+        return "Enter a valid daily price";
+    }
+
+    return null;
+};
+
+
+// =====================================================
+// ADMIN DASHBOARD
+// =====================================================
 
 const showAdminDashboard = async (req, res) => {
     const totalUsers = await User.countDocuments();
@@ -28,15 +94,28 @@ const showAdminDashboard = async (req, res) => {
     });
 };
 
+
+// =====================================================
+// BIKE MANAGEMENT
+// =====================================================
+
+// Show all bikes
+
 const showAllBikes = async (req, res) => {
     const bikes = await Bike.find().sort({ createdAt: -1 });
 
     res.render("admin/bikes", { bikes });
 };
 
+
+// Show add bike form
+
 const showAddBikeForm = (req, res) => {
     res.render("admin/addBike");
 };
+
+
+// Add a new bike
 
 const addBike = async (req, res) => {
     const {
@@ -47,36 +126,50 @@ const addBike = async (req, res) => {
         description,
         engine,
         mileage,
-        transmission,
-        image
+        transmission
     } = req.body;
 
-    if (!name || !brand || !type || !pricePerDay || !description) {
-        return res.status(400).send("Please fill all required fields");
+    const validationError = validateBikeInput(req.body);
+
+    if (validationError) {
+        await cleanupUploadedImage(req);
+        return res.status(400).send(validationError);
     }
 
-    if (!Number.isFinite(Number(pricePerDay)) || Number(pricePerDay) <= 0) {
-        return res.status(400).send("Enter a valid daily price");
-    }
+    try {
+        await Bike.create({
+            name: name.trim(),
+            brand: brand.trim(),
+            type,
+            pricePerDay: Number(pricePerDay),
+            description: description.trim(),
 
-    await Bike.create({
-        name,
-        brand,
-        type,
-        pricePerDay: Number(pricePerDay),
-        description,
-        specifications: {
-            engine,
-            mileage,
-            transmission
-        },
-        image
-    });
+            specifications: {
+                engine,
+                mileage,
+                transmission
+            },
+
+            image: req.file ? req.file.path : "",
+            imagePublicId: req.file ? req.file.filename : ""
+        });
+
+    } catch (error) {
+        await cleanupUploadedImage(req);
+        throw error;
+    }
 
     res.redirect("/admin/bikes");
 };
 
+
+// Show edit bike form
+
 const showEditBikeForm = async (req, res) => {
+    if (!isValidObjectId(req.params.id)) {
+        return res.status(400).send("Invalid bike ID");
+    }
+
     const bike = await Bike.findById(req.params.id);
 
     if (!bike) {
@@ -86,7 +179,31 @@ const showEditBikeForm = async (req, res) => {
     res.render("admin/editBike", { bike });
 };
 
+
+// Update existing bike
+
 const updateBike = async (req, res) => {
+    const validationError = validateBikeInput(req.body);
+
+    if (validationError) {
+        await cleanupUploadedImage(req);
+        return res.status(400).send(validationError);
+    }
+
+    if (!isValidObjectId(req.params.id)) {
+        await cleanupUploadedImage(req);
+        return res.status(400).send("Invalid bike ID");
+    }
+
+    const bike = await Bike.findById(req.params.id);
+
+    if (!bike) {
+        await cleanupUploadedImage(req);
+        return res.status(404).send("Bike not found");
+    }
+
+    const oldImagePublicId = bike.imagePublicId;
+
     const {
         name,
         brand,
@@ -95,40 +212,96 @@ const updateBike = async (req, res) => {
         description,
         engine,
         mileage,
-        transmission,
-        image
+        transmission
     } = req.body;
 
-    if (!name || !brand || !type || !pricePerDay || !description) {
-        return res.status(400).send("Please fill all required fields");
+    // Update bike details
+
+    bike.name = name.trim();
+    bike.brand = brand.trim();
+    bike.type = type;
+    bike.pricePerDay = Number(pricePerDay);
+    bike.description = description.trim();
+
+    bike.specifications = {
+        engine,
+        mileage,
+        transmission
+    };
+
+    // Replace image only if a new one was uploaded
+
+    if (req.file) {
+        bike.image = req.file.path;
+        bike.imagePublicId = req.file.filename;
     }
 
-    if (!Number.isFinite(Number(pricePerDay)) || Number(pricePerDay) <= 0) {
-        return res.status(400).send("Enter a valid daily price");
+    try {
+        await bike.save();
+
+    } catch (error) {
+        await cleanupUploadedImage(req);
+        throw error;
     }
 
-    const bike = await Bike.findByIdAndUpdate(
-        req.params.id,
-        {
-            name,
-            brand,
-            type,
-            pricePerDay: Number(pricePerDay),
-            description,
-            specifications: { engine, mileage, transmission },
-            image
-        },
-        { runValidators: true, new: true }
-    );
+    // Delete old image only after successful database update
 
-    if (!bike) {
-        return res.status(404).send("Bike not found");
+    if (req.file && oldImagePublicId) {
+        await removeCloudinaryImage(oldImagePublicId);
     }
 
     res.redirect("/admin/bikes");
 };
 
+
+// Delete bike
+
+const deleteBike = async (req, res) => {
+    if (!isValidObjectId(req.params.id)) {
+        return res.status(400).send("Invalid bike ID");
+    }
+
+    const bike = await Bike.findById(req.params.id);
+
+    if (!bike) {
+        return res.status(404).send("Bike not found");
+    }
+
+    const hasUnits = await BikeUnit.exists({
+        bike: bike._id
+    });
+
+    if (hasUnits) {
+        return res.status(400).send(
+            "Cannot delete this bike while physical units are associated with it"
+        );
+    }
+
+    const imagePublicId = bike.imagePublicId;
+
+    await bike.deleteOne();
+
+    // Remove associated Cloudinary image
+
+    if (imagePublicId) {
+        await removeCloudinaryImage(imagePublicId);
+    }
+
+    res.redirect("/admin/bikes");
+};
+
+
+// =====================================================
+// PHYSICAL BIKE UNIT MANAGEMENT
+// =====================================================
+
+// Show units belonging to a bike
+
 const showBikeUnits = async (req, res) => {
+    if (!isValidObjectId(req.params.bikeId)) {
+        return res.status(400).send("Invalid bike ID");
+    }
+
     const bike = await Bike.findById(req.params.bikeId);
 
     if (!bike) {
@@ -145,30 +318,51 @@ const showBikeUnits = async (req, res) => {
     });
 };
 
+
+// Add a physical bike unit
+
 const addBikeUnit = async (req, res) => {
     const { registrationNumber } = req.body;
+
+    if (!isValidObjectId(req.params.bikeId)) {
+        return res.status(400).send("Invalid bike ID");
+    }
 
     if (!registrationNumber || !registrationNumber.trim()) {
         return res.status(400).send("Registration number is required");
     }
 
+    const bike = await Bike.findById(req.params.bikeId);
+
+    if (!bike) {
+        return res.status(404).send("Bike not found");
+    }
+
     await BikeUnit.create({
-        bike: req.params.bikeId,
-        registrationNumber
+        bike: bike._id,
+        registrationNumber: registrationNumber.trim()
     });
 
-    res.redirect(`/admin/bikes/${req.params.bikeId}/units`);
+    res.redirect(`/admin/bikes/${bike._id}/units`);
 };
 
+
+// Update physical bike unit status
 
 const updateBikeUnitStatus = async (req, res) => {
     const { status } = req.body;
 
-    if (!["Available", "Maintenance", "Inactive"].includes(status)) {
+    const allowedStatuses = [
+        "Available",
+        "Maintenance",
+        "Inactive"
+    ];
+
+    if (!allowedStatuses.includes(status)) {
         return res.status(400).send("Invalid bike unit status");
     }
 
-    if (!mongoose.Types.ObjectId.isValid(req.params.unitId)) {
+    if (!isValidObjectId(req.params.unitId)) {
         return res.status(400).send("Invalid bike unit ID");
     }
 
@@ -190,6 +384,7 @@ const updateBikeUnitStatus = async (req, res) => {
             bikeId = unit.bike;
 
             // Coordinate with simultaneous booking transactions
+
             await BikeUnit.updateOne(
                 { _id: unit._id },
                 { $inc: { allocationVersion: 1 } },
@@ -197,6 +392,7 @@ const updateBikeUnitStatus = async (req, res) => {
             );
 
             // A unit with active bookings cannot be disabled
+
             if (status !== "Available") {
                 const hasActiveBookings = await Booking.exists({
                     bikeUnit: unit._id,
@@ -240,7 +436,13 @@ const updateBikeUnitStatus = async (req, res) => {
 };
 
 
+// Delete a physical bike unit
+
 const deleteBikeUnit = async (req, res) => {
+    if (!isValidObjectId(req.params.unitId)) {
+        return res.status(400).send("Invalid bike unit ID");
+    }
+
     const unit = await BikeUnit.findById(req.params.unitId);
 
     if (!unit) {
@@ -262,25 +464,12 @@ const deleteBikeUnit = async (req, res) => {
     res.redirect(`/admin/bikes/${unit.bike}/units`);
 };
 
-const deleteBike = async (req, res) => {
-    const bike = await Bike.findById(req.params.id);
 
-    if (!bike) {
-        return res.status(404).send("Bike not found");
-    }
+// =====================================================
+// BOOKING MANAGEMENT
+// =====================================================
 
-    const hasUnits = await BikeUnit.exists({ bike: bike._id });
-
-    if (hasUnits) {
-        return res.status(400).send(
-            "Cannot delete this bike while physical units are associated with it"
-        );
-    }
-
-    await bike.deleteOne();
-
-    res.redirect("/admin/bikes");
-};
+// Show all bookings
 
 const showAllBookings = async (req, res) => {
     const bookings = await Booking.find()
@@ -297,6 +486,8 @@ const showAllBookings = async (req, res) => {
 };
 
 
+// Update booking status
+
 const updateBookingStatus = async (req, res) => {
     const { status } = req.body;
 
@@ -311,7 +502,7 @@ const updateBookingStatus = async (req, res) => {
         return res.status(400).send("Invalid booking status");
     }
 
-    if (!mongoose.Types.ObjectId.isValid(req.params.bookingId)) {
+    if (!isValidObjectId(req.params.bookingId)) {
         return res.status(400).send("Invalid booking ID");
     }
 
@@ -322,11 +513,13 @@ const updateBookingStatus = async (req, res) => {
     }
 
     // No need to update if the status is already the same
+
     if (booking.bookingStatus === status) {
         return res.redirect("/admin/bookings");
     }
 
     // Only paid bookings can be confirmed
+
     if (
         status === "Confirmed" &&
         booking.paymentStatus !== "Paid"
@@ -337,6 +530,7 @@ const updateBookingStatus = async (req, res) => {
     }
 
     // Only paid and confirmed bookings can be completed
+
     if (
         status === "Completed" &&
         (
@@ -350,6 +544,7 @@ const updateBookingStatus = async (req, res) => {
     }
 
     // Paid bookings cannot be cancelled until refund handling exists
+
     if (
         status === "Cancelled" &&
         booking.paymentStatus === "Paid"
@@ -360,6 +555,7 @@ const updateBookingStatus = async (req, res) => {
     }
 
     // Prevent reopening cancelled or completed bookings
+
     if (
         status === "Pending" ||
         ["Cancelled", "Completed"].includes(booking.bookingStatus)
@@ -370,6 +566,7 @@ const updateBookingStatus = async (req, res) => {
     }
 
     // Only Pending bookings can be cancelled without a refund
+
     if (
         status === "Cancelled" &&
         booking.bookingStatus !== "Pending"
@@ -380,6 +577,7 @@ const updateBookingStatus = async (req, res) => {
     }
 
     // Conditional update prevents conflicting status changes
+
     const updatedBooking = await Booking.findOneAndUpdate(
         {
             _id: booking._id,
@@ -387,7 +585,9 @@ const updateBookingStatus = async (req, res) => {
             paymentStatus: booking.paymentStatus
         },
         {
-            $set: { bookingStatus: status }
+            $set: {
+                bookingStatus: status
+            }
         },
         {
             new: true,
@@ -405,6 +605,12 @@ const updateBookingStatus = async (req, res) => {
 };
 
 
+// =====================================================
+// USER MANAGEMENT
+// =====================================================
+
+// Show all users
+
 const showAllUsers = async (req, res) => {
     const users = await User.find()
         .select("-password")
@@ -416,6 +622,9 @@ const showAllUsers = async (req, res) => {
     });
 };
 
+
+// Update user role
+
 const updateUserRole = async (req, res) => {
     const { role } = req.body;
 
@@ -423,14 +632,25 @@ const updateUserRole = async (req, res) => {
         return res.status(400).send("Invalid role");
     }
 
-    if (req.params.userId === req.session.userId.toString()) {
-        return res.status(400).send("You cannot change your own role");
+    if (!isValidObjectId(req.params.userId)) {
+        return res.status(400).send("Invalid user ID");
+    }
+
+    // Prevent administrators from changing their own role
+
+    if (req.params.userId === String(req.session.userId)) {
+        return res.status(400).send(
+            "You cannot change your own role"
+        );
     }
 
     const user = await User.findByIdAndUpdate(
         req.params.userId,
         { role },
-        { new: true, runValidators: true }
+        {
+            new: true,
+            runValidators: true
+        }
     );
 
     if (!user) {
@@ -442,18 +662,22 @@ const updateUserRole = async (req, res) => {
 
 module.exports = {
     showAdminDashboard,
+
     showAllBikes,
     showAddBikeForm,
     addBike,
     showEditBikeForm,
     updateBike,
     deleteBike,
+
     showBikeUnits,
     addBikeUnit,
     updateBikeUnitStatus,
     deleteBikeUnit,
+
     showAllBookings,
     updateBookingStatus,
+
     showAllUsers,
     updateUserRole
 };

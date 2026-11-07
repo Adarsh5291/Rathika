@@ -36,13 +36,41 @@
         <% bookings.forEach(booking => { %>
 
             <div>
-                <h3>
-                    <%= booking.bikeUnit.bike.name %>
-                </h3>
 
-                <p>
-                    Brand: <%= booking.bikeUnit.bike.brand %>
-                </p>
+                <% if (booking.bikeUnit && booking.bikeUnit.bike) { %>
+
+                    <h3>
+                        <%= booking.bikeUnit.bike.name %>
+                    </h3>
+
+                    <% if (booking.bikeUnit.bike.image) { %>
+
+                        <img
+                            src="<%= booking.bikeUnit.bike.image %>"
+                            alt="<%= booking.bikeUnit.bike.name %>"
+                            style="
+                                width: 250px;
+                                height: 160px;
+                                object-fit: cover;
+                                border-radius: 8px;
+                            "
+                        >
+
+                    <% } else { %>
+
+                        <p>No image available for this bike.</p>
+
+                    <% } %>
+
+                    <p>
+                        Brand: <%= booking.bikeUnit.bike.brand %>
+                    </p>
+
+                <% } else { %>
+
+                    <h3>Bike information unavailable</h3>
+
+                <% } %>
 
                 <p>
                     Pickup Date:
@@ -67,20 +95,24 @@
                 </p>
 
                 <% if (
-                    booking.paymentStatus === "Pending" &&
+                    booking.bikeUnit &&
                     booking.bookingStatus === "Pending" &&
+                    booking.paymentStatus === "Pending" &&
                     booking.bikeUnit.status === "Available"
                 ) { %>
 
-                <a href="/bookings/<%= booking._id %>/payment">
-                <button type="button">Complete Payment</button>
-                </a>
+                    <a href="/bookings/<%= booking._id %>/payment">
+                        <button type="button">Complete Payment</button>
+                    </a>
 
                 <% } %>
 
                 <% if (["Pending", "Confirmed"].includes(booking.bookingStatus)) { %>
 
-                    <form action="/bookings/<%= booking._id %>/cancel" method="POST">
+                    <form
+                        action="/bookings/<%= booking._id %>/cancel"
+                        method="POST"
+                    >
 
                         <input
                             type="hidden"

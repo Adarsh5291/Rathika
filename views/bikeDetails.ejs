@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,6 +13,26 @@
 
     <h1><%= bike.name %></h1>
 
+    <% if (bike.image) { %>
+
+        <img
+            src="<%= bike.image %>"
+            alt="<%= bike.name %>"
+            style="
+                width: 450px;
+                max-width: 100%;
+                height: 300px;
+                object-fit: cover;
+                border-radius: 8px;
+            "
+        >
+
+    <% } else { %>
+
+        <p>No image available for this bike.</p>
+
+    <% } %>
+
     <p>Brand: <%= bike.brand %></p>
 
     <p>Type: <%= bike.type %></p>
@@ -20,17 +41,19 @@
 
     <p><%= bike.description %></p>
 
-    <a href="/bookings/new/<%= bike._id %>">Book Now</a>
-
     <h2>Specifications</h2>
 
-    <p>Engine: <%= bike.specifications.engine %></p>
+    <p>Engine: <%= bike.specifications.engine || "Not specified" %></p>
 
-    <p>Mileage: <%= bike.specifications.mileage %></p>
+    <p>Mileage: <%= bike.specifications.mileage || "Not specified" %></p>
 
-    <p>Transmission: <%= bike.specifications.transmission %></p>
+    <p>Transmission: <%= bike.specifications.transmission || "Not specified" %></p>
 
     <br>
+
+    <a href="/bookings/new/<%= bike._id %>">Book Now</a>
+
+    <br><br>
 
     <a href="/bikes">← Back to Bikes</a>
 

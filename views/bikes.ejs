@@ -1,10 +1,11 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Browse Bikes - Rathika</title>>
+    <title>Browse Bikes - Rathika</title>
 
     <link rel="stylesheet" href="/css/style.css">
 </head>
@@ -33,11 +34,31 @@
         <% bikes.forEach(bike => { %>
 
             <div>
+
                 <h2>
                     <a href="/bikes/<%= bike._id %>">
                         <%= bike.name %>
                     </a>
                 </h2>
+
+                <% if (bike.image) { %>
+
+                    <img
+                        src="<%= bike.image %>"
+                        alt="<%= bike.name %>"
+                        style="
+                            width: 300px;
+                            height: 200px;
+                            object-fit: cover;
+                            border-radius: 8px;
+                        "
+                    >
+
+                <% } else { %>
+
+                    <p>No image available.</p>
+
+                <% } %>
 
                 <p>Brand: <%= bike.brand %></p>
 
@@ -46,6 +67,11 @@
                 <p>₹<%= bike.pricePerDay %> / day</p>
 
                 <p><%= bike.description %></p>
+
+                <a href="/bikes/<%= bike._id %>">
+                    View Details
+                </a>
+
             </div>
 
             <hr>

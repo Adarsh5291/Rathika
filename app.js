@@ -7,10 +7,14 @@ dotenv.config();
 const session = require("express-session");
 const helmet = require("helmet");
 const { rateLimit } = require("express-rate-limit");
-const { csrfSync } = require("csrf-sync");
 
 const connectDB = require("./config/db");
 const errorHandler = require("./middleware/errorHandler");
+
+const {
+    generateToken,
+    csrfSynchronisedProtection
+} = require("./middleware/csrf");
 
 const bikeRoutes = require("./routes/bikeRoutes");
 const authRoutes = require("./routes/authRoutes");
@@ -39,7 +43,7 @@ app.use(
 // Static files.
 app.use(express.static("public"));
 
-// Parse request data.
+// Parse regular form data and JSON.
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
@@ -81,6 +85,7 @@ app.use("/login", (req, res, next) => {
     if (req.method === "POST") {
         return loginLimiter(req, res, next);
     }
+
     next();
 });
 
@@ -88,27 +93,36 @@ app.use("/register", (req, res, next) => {
     if (req.method === "POST") {
         return registerLimiter(req, res, next);
     }
+
     next();
 });
 
-// CSRF protection.
-const {
-    generateToken,
-    csrfSynchronisedProtection
-} = csrfSync({
-    getTokenFromRequest: (req) => {
-        return req.body?._csrf || req.headers["x-csrf-token"];
-    }
-});
-
-// Make token available to EJS pages.
+// Generate a CSRF token for EJS pages.
 app.use((req, res, next) => {
     res.locals.csrfToken = generateToken(req);
     next();
 });
 
-// Protect POST, PUT, PATCH and DELETE requests.
-app.use(csrfSynchronisedProtection);
+// Global CSRF protection.
+//
+// Bike image forms use multipart/form-data.
+// Their CSRF validation is performed inside adminRoutes,
+// after Multer has parsed the form fields.
+app.use((req, res, next) => {
+    const isBikeImageUpload =
+        req.method === "POST" &&
+        req.is("multipart/form-data") &&
+        (
+            req.path === "/admin/bikes" ||
+            /^\/admin\/bikes\/[^/]+\/edit$/.test(req.path)
+        );
+
+    if (isBikeImageUpload) {
+        return next();
+    }
+
+    csrfSynchronisedProtection(req, res, next);
+});
 
 // Routes.
 app.use("/", authRoutes);
