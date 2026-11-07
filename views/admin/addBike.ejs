@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Bike - Rathika</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <h1>Add New Bike</h1>
+
+    <form action="/admin/bikes" method="POST">
+
+        <label>Bike Name</label>
+        <input type="text" name="name" required>
+
+        <label>Brand</label>
+        <input type="text" name="brand" required>
+
+        <label>Type</label>
+        <select name="type" required>
+            <option value="">Select Type</option>
+            <option>Sports</option>
+            <option>Classic</option>
+            <option>Cruiser</option>
+            <option>Adventure</option>
+            <option>Scooter</option>
+            <option>Other</option>
+        </select>
+
+        <label>Price Per Day (₹)</label>
+        <input type="number" name="pricePerDay" min="1" required>
+
+        <label>Description</label>
+        <textarea name="description" required></textarea>
+
+        <label>Engine</label>
+        <input type="text" name="engine">
+
+        <label>Mileage</label>
+        <input type="text" name="mileage">
+
+        <label>Transmission</label>
+        <input type="text" name="transmission">
+
+        <label>Image URL</label>
+        <input type="text" name="image">
+
+        <button type="submit">Add Bike</button>
+
+    </form>
+
+    <a href="/admin/bikes">Back to Bikes</a>
+
+</body>
+</html>

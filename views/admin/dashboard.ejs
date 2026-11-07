@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Rathika</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <h1>Rathika Admin Dashboard</h1>
+
+    <h2>Overview</h2>
+
+    <div>
+        <h3>Total Users</h3>
+        <p><%= totalUsers %></p>
+    </div>
+
+    <div>
+        <h3>Bike Models</h3>
+        <p><%= totalBikes %></p>
+    </div>
+
+    <div>
+        <h3>Physical Bike Units</h3>
+        <p><%= totalBikeUnits %></p>
+    </div>
+
+    <div>
+        <h3>Total Bookings</h3>
+        <p><%= totalBookings %></p>
+    </div>
+
+    <div>
+        <h3>Pending Bookings</h3>
+        <p><%= pendingBookings %></p>
+    </div>
+
+    <div>
+        <h3>Cancelled Bookings</h3>
+        <p><%= cancelledBookings %></p>
+    </div>
+
+    <hr>
+
+    <h2>Management</h2>
+
+    <p>Bike management — Coming next</p>
+    <p>Bike unit management — Coming next</p>
+    <a href="/admin/bikes">Manage Bikes</a>
+    <br>
+    <a href="/admin/bookings">Manage Bookings</a>   
+    <br>
+    <p>User management — Coming next</p>
+    <a href="/dashboard">User Dashboard</a>
+
+</body>
+</html>

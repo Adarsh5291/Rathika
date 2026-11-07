@@ -4,8 +4,10 @@ const connectDB = require("./config/db");
 const errorHandler = require("./middleware/errorHandler");
 const bikeRoutes = require("./routes/bikeRoutes");
 const authRoutes = require("./routes/authRoutes");
-const session = require("express-session");
 const bookingRoutes = require("./routes/bookingRoutes");
+const adminRoutes = require("./routes/adminRoutes");
+const session = require("express-session");
+
 
 dotenv.config();
 
@@ -38,6 +40,8 @@ app.get("/", (req, res) => {
 app.use("/bikes", bikeRoutes);
 
 app.use("/bookings", bookingRoutes);
+
+app.use("/admin", adminRoutes);
 
 app.use(errorHandler);
 

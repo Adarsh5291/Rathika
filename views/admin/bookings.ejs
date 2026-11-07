@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Bookings - Rathika</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <h1>Manage Bookings</h1>
+
+    <a href="/admin/dashboard">Admin Dashboard</a>
+
+    <hr>
+
+    <% if (bookings.length === 0) { %>
+
+        <p>No bookings found.</p>
+
+    <% } else { %>
+
+        <% bookings.forEach(booking => { %>
+
+            <div>
+                <h2>
+                    <%= booking.bikeUnit.bike.name %>
+                </h2>
+
+                <p>
+                    Customer:
+                    <%= booking.user.name %>
+                </p>
+
+                <p>
+                    Email:
+                    <%= booking.user.email %>
+                </p>
+
+                <p>
+                    Pickup:
+                    <%= booking.pickupDate.toDateString() %>
+                </p>
+
+                <p>
+                    Return:
+                    <%= booking.returnDate.toDateString() %>
+                </p>
+
+                <p>
+                    Amount: ₹<%= booking.totalAmount %>
+                </p>
+
+                <p>
+                    Booking Status: <%= booking.bookingStatus %>
+                </p>
+
+                <p>
+                    Payment Status: <%= booking.paymentStatus %>
+                </p>
+
+                <form
+                    action="/admin/bookings/<%= booking._id %>/status"
+                    method="POST"
+                >
+
+                    <label>Update Booking Status</label>
+
+                    <select name="status">
+                        <% ["Pending", "Confirmed", "Cancelled", "Completed"].forEach(status => { %>
+
+                            <option
+                                value="<%= status %>"
+                                <%= booking.bookingStatus === status ? "selected" : "" %>
+                            >
+                                <%= status %>
+                            </option>
+
+                        <% }) %>
+                    </select>
+
+                    <button type="submit">Update Status</button>
+
+                </form>
+
+            </div>
+
+            <hr>
+
+        <% }) %>
+
+    <% } %>
+
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Bike - Rathika</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <h1>Edit <%= bike.name %></h1>
+
+    <form action="/admin/bikes/<%= bike._id %>/edit" method="POST">
+
+        <label>Bike Name</label>
+        <input type="text" name="name" value="<%= bike.name %>" required>
+
+        <label>Brand</label>
+        <input type="text" name="brand" value="<%= bike.brand %>" required>
+
+        <label>Type</label>
+        <select name="type" required>
+            <% ["Sports", "Classic", "Cruiser", "Adventure", "Scooter", "Other"].forEach(type => { %>
+                <option value="<%= type %>" <%= bike.type === type ? "selected" : "" %>>
+                    <%= type %>
+                </option>
+            <% }) %>
+        </select>
+
+        <label>Price Per Day (₹)</label>
+        <input type="number" name="pricePerDay" min="1" value="<%= bike.pricePerDay %>" required>
+
+        <label>Description</label>
+        <textarea name="description" required><%= bike.description %></textarea>
+
+        <label>Engine</label>
+        <input type="text" name="engine" value="<%= bike.specifications?.engine || '' %>">
+
+        <label>Mileage</label>
+        <input type="text" name="mileage" value="<%= bike.specifications?.mileage || '' %>">
+
+        <label>Transmission</label>
+        <input type="text" name="transmission" value="<%= bike.specifications?.transmission || '' %>">
+
+        <label>Image URL</label>
+        <input type="text" name="image" value="<%= bike.image || '' %>">
+
+        <button type="submit">Save Changes</button>
+
+    </form>
+
+    <a href="/admin/bikes">Back to Bikes</a>
+
+</body>
+</html>

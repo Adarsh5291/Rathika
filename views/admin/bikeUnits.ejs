@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Bike Units - Rathika</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <h1>Manage Units - <%= bike.name %></h1>
+
+    <h2>Add Physical Bike Unit</h2>
+
+    <form action="/admin/bikes/<%= bike._id %>/units" method="POST">
+
+        <label>Registration Number</label>
+        <input
+            type="text"
+            name="registrationNumber"
+            placeholder="GB-PUL-004"
+            required
+        >
+
+        <button type="submit">Add Unit</button>
+
+    </form>
+
+    <hr>
+
+    <h2>Existing Units</h2>
+
+    <% if (bikeUnits.length === 0) { %>
+
+        <p>No physical units found.</p>
+
+    <% } else { %>
+
+        <% bikeUnits.forEach(unit => { %>
+
+            <div>
+                <h3><%= unit.registrationNumber %></h3>
+
+                <p>Current Status: <%= unit.status %></p>
+
+                <form
+                    action="/admin/units/<%= unit._id %>/status"
+                    method="POST"
+                >
+
+                    <select name="status">
+                        <% ["Available", "Maintenance", "Inactive"].forEach(status => { %>
+
+                            <option
+                                value="<%= status %>"
+                                <%= unit.status === status ? "selected" : "" %>
+                            >
+                                <%= status %>
+                            </option>
+
+                        <% }) %>
+                    </select>
+
+                    <button type="submit">Update Status</button>
+
+                </form>
+
+                <form
+                    action="/admin/units/<%= unit._id %>/delete"
+                    method="POST"
+                    onsubmit="return confirm('Delete this physical bike unit?')"
+                >
+                    <button type="submit">Delete Unit</button>
+                </form>
+
+            </div>
+
+            <hr>
+
+        <% }) %>
+
+    <% } %>
+
+    <a href="/admin/bikes">Back to Bikes</a>
+
+</body>
+</html>

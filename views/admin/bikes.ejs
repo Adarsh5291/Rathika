@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Bikes - Rathika</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <h1>Manage Bikes</h1>
+
+    <a href="/admin/bikes/new">Add New Bike</a>
+    <a href="/admin/dashboard">Back to Admin Dashboard</a>
+
+    <hr>
+
+    <% if (bikes.length === 0) { %>
+        <p>No bikes have been added yet.</p>
+    <% } else { %>
+
+        <% bikes.forEach(bike => { %>
+            <div>
+                <h2><%= bike.name %></h2>
+
+                <p>Brand: <%= bike.brand %></p>
+                <p>Type: <%= bike.type %></p>
+                <p>Price: ₹<%= bike.pricePerDay %> / day</p>
+
+                <a href="/admin/bikes/<%= bike._id %>/edit">
+                    Edit
+                </a>
+
+                <a href="/admin/bikes/<%= bike._id %>/units">
+                    Manage Physical Units
+                </a>
+
+                <form
+                    action="/admin/bikes/<%= bike._id %>/delete"
+                    method="POST"
+                    onsubmit="return confirm('Are you sure you want to delete this bike?')"
+                >
+                    <button type="submit">Delete</button>
+                </form>
+            </div>
+
+            <hr>
+        <% }) %>
+
+    <% } %>
+
+</body>
+</html>
