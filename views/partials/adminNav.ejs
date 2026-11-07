@@ -1,0 +1,69 @@
+<div class="admin-badge-strip">
+    <div class="container" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            <span>Rathika Administration Portal</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <a href="/dashboard" style="color: #c7d2fe; font-size: 0.8rem; text-decoration: none;">User Dashboard</a>
+            <a href="/bikes" style="color: #c7d2fe; font-size: 0.8rem; text-decoration: none;">View Live Fleet &rarr;</a>
+        </div>
+    </div>
+</div>
+
+<header class="app-navbar" style="position: static; border-bottom: 1px solid var(--border-color); background: var(--bg-card);">
+    <div class="container navbar-container">
+        <a href="/admin/dashboard" class="brand-logo" aria-label="Rathika Admin">
+            <div class="brand-icon" style="background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+            </div>
+            <span class="brand-text">RATHIKA <span style="color: #818cf8; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-left: 4px;">ADMIN</span></span>
+        </a>
+
+        <nav>
+            <ul class="nav-links" id="adminNavLinks">
+                <li>
+                    <a href="/admin/dashboard" class="nav-link <%= (typeof activeTab !== 'undefined' && activeTab === 'dashboard') ? 'active' : '' %>">Overview</a>
+                </li>
+                <li>
+                    <a href="/admin/bikes" class="nav-link <%= (typeof activeTab !== 'undefined' && activeTab === 'bikes') ? 'active' : '' %>">Manage Bikes</a>
+                </li>
+                <li>
+                    <a href="/admin/bookings" class="nav-link <%= (typeof activeTab !== 'undefined' && activeTab === 'bookings') ? 'active' : '' %>">Manage Bookings</a>
+                </li>
+                <li>
+                    <a href="/admin/users" class="nav-link <%= (typeof activeTab !== 'undefined' && activeTab === 'users') ? 'active' : '' %>">Manage Users</a>
+                </li>
+            </ul>
+        </nav>
+
+        <button type="button" class="mobile-toggle" aria-label="Toggle navigation" aria-expanded="false" id="adminMobileBtn">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+</header>
+
+<script>
+    (function() {
+        const toggleBtn = document.getElementById("adminMobileBtn");
+        const navMenu = document.getElementById("adminNavLinks");
+        if (toggleBtn && navMenu) {
+            toggleBtn.addEventListener("click", function() {
+                const isOpen = navMenu.classList.toggle("open");
+                toggleBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+            });
+        }
+    })();
+</script>
+

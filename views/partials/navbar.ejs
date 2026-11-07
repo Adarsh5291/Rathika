@@ -1,0 +1,70 @@
+<header class="app-navbar">
+    <div class="container navbar-container">
+        <a href="/" class="brand-logo" aria-label="Rathika Home">
+            <div class="brand-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="5.5" cy="17.5" r="3.5"/>
+                    <circle cx="18.5" cy="17.5" r="3.5"/>
+                    <path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h4"/>
+                </svg>
+            </div>
+            <span class="brand-text">RATHIKA<span>.</span></span>
+        </a>
+
+        <nav>
+            <ul class="nav-links" id="primaryNavLinks">
+                <li><a href="/" class="nav-link">Home</a></li>
+                <li><a href="/bikes" class="nav-link">Browse Bikes</a></li>
+
+                <% if (typeof user !== "undefined" && user) { %>
+                    <li><a href="/dashboard" class="nav-link">My Dashboard</a></li>
+
+                    <% if (user.role === "admin") { %>
+                        <li>
+                            <a href="/admin/dashboard" class="nav-link" style="color: var(--accent);">
+                                <span class="badge badge-accent" style="font-size: 0.7rem; padding: 2px 8px; vertical-align: middle;">Admin</span>
+                            </a>
+                        </li>
+                    <% } %>
+
+                    <li class="nav-actions">
+                        <form action="/logout" method="POST" style="display: inline; margin: 0;">
+                            <% if (typeof csrfToken !== "undefined") { %>
+                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                            <% } %>
+                            <button type="submit" class="btn btn-outline btn-sm">Logout</button>
+                        </form>
+                    </li>
+                <% } else { %>
+                    <li><a href="/dashboard" class="nav-link">Dashboard</a></li>
+                    <li class="nav-actions">
+                        <a href="/login" class="btn btn-outline btn-sm">Login</a>
+                        <a href="/register" class="btn btn-primary btn-sm">Register</a>
+                    </li>
+                <% } %>
+            </ul>
+        </nav>
+
+        <button type="button" class="mobile-toggle" aria-label="Toggle navigation" aria-expanded="false" id="mobileMenuBtn">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+</header>
+
+<script>
+    (function() {
+        const toggleBtn = document.getElementById("mobileMenuBtn");
+        const navMenu = document.getElementById("primaryNavLinks");
+        if (toggleBtn && navMenu) {
+            toggleBtn.addEventListener("click", function() {
+                const isOpen = navMenu.classList.toggle("open");
+                toggleBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+            });
+        }
+    })();
+</script>
+
