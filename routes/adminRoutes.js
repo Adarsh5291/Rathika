@@ -15,7 +15,9 @@ const {
     updateBikeUnitStatus,
     deleteBikeUnit,
     showAllBookings,
-    updateBookingStatus
+    updateBookingStatus,
+    showAllUsers,
+    updateUserRole
 } = require("../controllers/adminController");
 
 const router = express.Router();
@@ -43,5 +45,8 @@ router.post("/units/:unitId/delete", wrapAsync(deleteBikeUnit));
 router.get("/bookings", wrapAsync(showAllBookings));
 
 router.post("/bookings/:bookingId/status", wrapAsync(updateBookingStatus));
+router.get("/users", wrapAsync(showAllUsers));
+
+router.post("/users/:userId/role", wrapAsync(updateUserRole));
 
 module.exports = router;

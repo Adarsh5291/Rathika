@@ -1,5 +1,6 @@
 const express = require("express");
 const dotenv = require("dotenv");
+dotenv.config();
 const connectDB = require("./config/db");
 const errorHandler = require("./middleware/errorHandler");
 const bikeRoutes = require("./routes/bikeRoutes");
@@ -7,9 +8,6 @@ const authRoutes = require("./routes/authRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const session = require("express-session");
-
-
-dotenv.config();
 
 const app = express();
 
@@ -30,6 +28,7 @@ app.use(
 );
 
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 app.use("/", authRoutes);
 

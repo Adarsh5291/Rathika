@@ -262,6 +262,41 @@ const updateBookingStatus = async (req, res) => {
     res.redirect("/admin/bookings");
 };
 
+const showAllUsers = async (req, res) => {
+    const users = await User.find()
+        .select("-password")
+        .sort({ createdAt: -1 });
+
+    res.render("admin/users", {
+        users,
+        currentUserId: req.session.userId
+    });
+};
+
+const updateUserRole = async (req, res) => {
+    const { role } = req.body;
+
+    if (!["user", "admin"].includes(role)) {
+        return res.status(400).send("Invalid role");
+    }
+
+    if (req.params.userId === req.session.userId.toString()) {
+        return res.status(400).send("You cannot change your own role");
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.params.userId,
+        { role },
+        { new: true, runValidators: true }
+    );
+
+    if (!user) {
+        return res.status(404).send("User not found");
+    }
+
+    res.redirect("/admin/users");
+};
+
 module.exports = {
     showAdminDashboard,
     showAllBikes,
@@ -275,5 +310,7 @@ module.exports = {
     updateBikeUnitStatus,
     deleteBikeUnit,
     showAllBookings,
-    updateBookingStatus
+    updateBookingStatus,
+    showAllUsers,
+    updateUserRole
 };

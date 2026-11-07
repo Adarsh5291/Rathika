@@ -1,0 +1,115 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment - Rathika</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <h1>Complete Your Payment</h1>
+
+    <h2><%= bike.name %></h2>
+
+    <p>Pickup: <%= booking.pickupDate.toDateString() %></p>
+    <p>Return: <%= booking.returnDate.toDateString() %></p>
+    <p>Total Amount: ₹<%= booking.totalAmount %></p>
+
+    <button id="payButton">Pay Now</button>
+
+    <p id="paymentMessage"></p>
+
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <script>
+        const payButton = document.getElementById("payButton");
+        const paymentMessage = document.getElementById("paymentMessage");
+
+        payButton.addEventListener("click", async () => {
+            payButton.disabled = true;
+            paymentMessage.textContent = "Creating payment order...";
+
+            try {
+                const orderResponse = await fetch(
+                    `/bookings/${"<%= booking._id %>"}/create-order`,
+                    { method: "POST" }
+                );
+
+                if (!orderResponse.ok) {
+                    throw new Error(await orderResponse.text());
+                }
+
+                const order = await orderResponse.json();
+
+                const options = {
+                    key: order.keyId,
+                    amount: order.amount,
+                    currency: order.currency,
+                    name: "Rathika",
+                    description: "Bike Rental Booking",
+                    order_id: order.orderId,
+
+                    handler: async function (response) {
+                        paymentMessage.textContent = "Verifying payment...";
+
+                        try {
+                            const verifyResponse = await fetch(
+                                `/bookings/${"<%= booking._id %>"}/verify-payment`,
+                                {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json"
+                                    },
+                                    body: JSON.stringify(response)
+                                }
+                            );
+
+                            if (!verifyResponse.ok) {
+                                throw new Error(await verifyResponse.text());
+                            }
+
+                            paymentMessage.textContent =
+                                "Payment successful! Booking confirmed.";
+
+                            window.location.href = "/dashboard";
+                        } catch (error) {
+                            paymentMessage.textContent =
+                                "Payment verification failed: " + error.message;
+                            payButton.disabled = false;
+                        }
+                    },
+
+                    modal: {
+                        ondismiss: function () {
+                            paymentMessage.textContent =
+                                "Payment window closed. You can try again.";
+                            payButton.disabled = false;
+                        }
+                    },
+
+                    theme: {
+                        color: "#2563eb"
+                    }
+                };
+
+                const razorpayCheckout = new Razorpay(options);
+
+                razorpayCheckout.on("payment.failed", function (response) {
+                    paymentMessage.textContent =
+                        "Payment failed: " +
+                        response.error.description;
+
+                    payButton.disabled = false;
+                });
+
+                razorpayCheckout.open();
+
+            } catch (error) {
+                paymentMessage.textContent = error.message;
+                payButton.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

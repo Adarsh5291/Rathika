@@ -1,0 +1,58 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users - Rathika</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <h1>Manage Users</h1>
+
+    <a href="/admin/dashboard">Admin Dashboard</a>
+
+    <hr>
+
+    <% if (users.length === 0) { %>
+        <p>No users registered yet.</p>
+    <% } else { %>
+
+        <% users.forEach(user => { %>
+            <div>
+                <h2><%= user.name %></h2>
+
+                <p>Email: <%= user.email %></p>
+                <p>Role: <%= user.role %></p>
+                <p>Registered: <%= user.createdAt.toDateString() %></p>
+
+                <% if (user._id.toString() !== currentUserId.toString()) { %>
+
+                    <form action="/admin/users/<%= user._id %>/role" method="POST">
+
+                        <label>Change Role:</label>
+
+                        <select name="role">
+                            <option value="user" <%= user.role === "user" ? "selected" : "" %>>
+                                User
+                            </option>
+
+                            <option value="admin" <%= user.role === "admin" ? "selected" : "" %>>
+                                Admin
+                            </option>
+                        </select>
+
+                        <button type="submit">Update Role</button>
+                    </form>
+
+                <% } else { %>
+                    <p>You cannot change your own role.</p>
+                <% } %>
+            </div>
+
+            <hr>
+        <% }) %>
+
+    <% } %>
+</body>
+</html>
