@@ -26,6 +26,8 @@
         const payButton = document.getElementById("payButton");
         const paymentMessage = document.getElementById("paymentMessage");
 
+        const csrfToken = "<%= csrfToken %>";
+
         payButton.addEventListener("click", async () => {
             payButton.disabled = true;
             paymentMessage.textContent = "Creating payment order...";
@@ -33,7 +35,12 @@
             try {
                 const orderResponse = await fetch(
                     `/bookings/${"<%= booking._id %>"}/create-order`,
-                    { method: "POST" }
+                    {
+                        method: "POST",
+                        headers: {
+                            "x-csrf-token": csrfToken
+                        }
+                    }
                 );
 
                 if (!orderResponse.ok) {
@@ -59,7 +66,8 @@
                                 {
                                     method: "POST",
                                     headers: {
-                                        "Content-Type": "application/json"
+                                        "Content-Type": "application/json",
+                                        "x-csrf-token": csrfToken
                                     },
                                     body: JSON.stringify(response)
                                 }
@@ -73,9 +81,11 @@
                                 "Payment successful! Booking confirmed.";
 
                             window.location.href = "/dashboard";
+
                         } catch (error) {
                             paymentMessage.textContent =
                                 "Payment verification failed: " + error.message;
+
                             payButton.disabled = false;
                         }
                     },
@@ -84,6 +94,7 @@
                         ondismiss: function () {
                             paymentMessage.textContent =
                                 "Payment window closed. You can try again.";
+
                             payButton.disabled = false;
                         }
                     },

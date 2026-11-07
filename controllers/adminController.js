@@ -2,6 +2,7 @@ const User = require("../models/User");
 const Bike = require("../models/Bike");
 const BikeUnit = require("../models/BikeUnit");
 const Booking = require("../models/Booking");
+const mongoose = require("mongoose");
 
 const showAdminDashboard = async (req, res) => {
     const totalUsers = await User.countDocuments();
@@ -159,6 +160,7 @@ const addBikeUnit = async (req, res) => {
     res.redirect(`/admin/bikes/${req.params.bikeId}/units`);
 };
 
+
 const updateBikeUnitStatus = async (req, res) => {
     const { status } = req.body;
 
@@ -166,18 +168,77 @@ const updateBikeUnitStatus = async (req, res) => {
         return res.status(400).send("Invalid bike unit status");
     }
 
-    const unit = await BikeUnit.findByIdAndUpdate(
-        req.params.unitId,
-        { status },
-        { new: true, runValidators: true }
-    );
-
-    if (!unit) {
-        return res.status(404).send("Bike unit not found");
+    if (!mongoose.Types.ObjectId.isValid(req.params.unitId)) {
+        return res.status(400).send("Invalid bike unit ID");
     }
 
-    res.redirect(`/admin/bikes/${unit.bike}/units`);
+    const session = await mongoose.startSession();
+
+    let bikeId;
+
+    try {
+        await session.withTransaction(async () => {
+            const unit = await BikeUnit.findById(req.params.unitId)
+                .session(session);
+
+            if (!unit) {
+                const error = new Error("Bike unit not found");
+                error.statusCode = 404;
+                throw error;
+            }
+
+            bikeId = unit.bike;
+
+            // Coordinate with simultaneous booking transactions
+            await BikeUnit.updateOne(
+                { _id: unit._id },
+                { $inc: { allocationVersion: 1 } },
+                { session }
+            );
+
+            // A unit with active bookings cannot be disabled
+            if (status !== "Available") {
+                const hasActiveBookings = await Booking.exists({
+                    bikeUnit: unit._id,
+                    bookingStatus: {
+                        $in: ["Pending", "Confirmed"]
+                    }
+                }).session(session);
+
+                if (hasActiveBookings) {
+                    const error = new Error(
+                        "Cannot disable this bike unit because it has active bookings"
+                    );
+
+                    error.statusCode = 409;
+                    throw error;
+                }
+            }
+
+            await BikeUnit.updateOne(
+                { _id: unit._id },
+                { $set: { status } },
+                {
+                    session,
+                    runValidators: true
+                }
+            );
+        });
+
+    } catch (error) {
+        if (error.statusCode) {
+            return res.status(error.statusCode).send(error.message);
+        }
+
+        throw error;
+
+    } finally {
+        await session.endSession();
+    }
+
+    res.redirect(`/admin/bikes/${bikeId}/units`);
 };
+
 
 const deleteBikeUnit = async (req, res) => {
     const unit = await BikeUnit.findById(req.params.unitId);
@@ -235,6 +296,7 @@ const showAllBookings = async (req, res) => {
     res.render("admin/bookings", { bookings });
 };
 
+
 const updateBookingStatus = async (req, res) => {
     const { status } = req.body;
 
@@ -249,18 +311,99 @@ const updateBookingStatus = async (req, res) => {
         return res.status(400).send("Invalid booking status");
     }
 
+    if (!mongoose.Types.ObjectId.isValid(req.params.bookingId)) {
+        return res.status(400).send("Invalid booking ID");
+    }
+
     const booking = await Booking.findById(req.params.bookingId);
 
     if (!booking) {
         return res.status(404).send("Booking not found");
     }
 
-    booking.bookingStatus = status;
+    // No need to update if the status is already the same
+    if (booking.bookingStatus === status) {
+        return res.redirect("/admin/bookings");
+    }
 
-    await booking.save();
+    // Only paid bookings can be confirmed
+    if (
+        status === "Confirmed" &&
+        booking.paymentStatus !== "Paid"
+    ) {
+        return res.status(400).send(
+            "Cannot confirm a booking before successful payment"
+        );
+    }
+
+    // Only paid and confirmed bookings can be completed
+    if (
+        status === "Completed" &&
+        (
+            booking.bookingStatus !== "Confirmed" ||
+            booking.paymentStatus !== "Paid"
+        )
+    ) {
+        return res.status(400).send(
+            "Only paid and confirmed bookings can be completed"
+        );
+    }
+
+    // Paid bookings cannot be cancelled until refund handling exists
+    if (
+        status === "Cancelled" &&
+        booking.paymentStatus === "Paid"
+    ) {
+        return res.status(400).send(
+            "This booking has been paid. Handle the refund before cancellation."
+        );
+    }
+
+    // Prevent reopening cancelled or completed bookings
+    if (
+        status === "Pending" ||
+        ["Cancelled", "Completed"].includes(booking.bookingStatus)
+    ) {
+        return res.status(400).send(
+            "This booking status transition is not allowed"
+        );
+    }
+
+    // Only Pending bookings can be cancelled without a refund
+    if (
+        status === "Cancelled" &&
+        booking.bookingStatus !== "Pending"
+    ) {
+        return res.status(400).send(
+            "Only pending bookings can be cancelled without a refund"
+        );
+    }
+
+    // Conditional update prevents conflicting status changes
+    const updatedBooking = await Booking.findOneAndUpdate(
+        {
+            _id: booking._id,
+            bookingStatus: booking.bookingStatus,
+            paymentStatus: booking.paymentStatus
+        },
+        {
+            $set: { bookingStatus: status }
+        },
+        {
+            new: true,
+            runValidators: true
+        }
+    );
+
+    if (!updatedBooking) {
+        return res.status(409).send(
+            "Booking was updated by another request. Please try again."
+        );
+    }
 
     res.redirect("/admin/bookings");
 };
+
 
 const showAllUsers = async (req, res) => {
     const users = await User.find()

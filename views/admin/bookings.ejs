@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -63,6 +64,8 @@
                     action="/admin/bookings/<%= booking._id %>/status"
                     method="POST"
                 >
+
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
                     <label>Update Booking Status</label>
 

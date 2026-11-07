@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,67 +25,95 @@
 
     <hr>
 
-<h2>My Bookings</h2>
+    <h2>My Bookings</h2>
 
-<% if (bookings.length === 0) { %>
+    <% if (bookings.length === 0) { %>
 
-    <p>You haven't made any bookings yet.</p>
+        <p>You haven't made any bookings yet.</p>
 
-<% } else { %>
+    <% } else { %>
 
-    <% bookings.forEach(booking => { %>
+        <% bookings.forEach(booking => { %>
 
-        <div>
-            <h3>
-                <%= booking.bikeUnit.bike.name %>
-            </h3>
+            <div>
+                <h3>
+                    <%= booking.bikeUnit.bike.name %>
+                </h3>
 
-            <p>
-                Brand: <%= booking.bikeUnit.bike.brand %>
-            </p>
+                <p>
+                    Brand: <%= booking.bikeUnit.bike.brand %>
+                </p>
 
-            <p>
-                Pickup Date:
-                <%= booking.pickupDate.toDateString() %>
-            </p>
+                <p>
+                    Pickup Date:
+                    <%= booking.pickupDate.toDateString() %>
+                </p>
 
-            <p>
-                Return Date:
-                <%= booking.returnDate.toDateString() %>
-            </p>
+                <p>
+                    Return Date:
+                    <%= booking.returnDate.toDateString() %>
+                </p>
 
-            <p>
-                Total Amount: ₹<%= booking.totalAmount %>
-            </p>
+                <p>
+                    Total Amount: ₹<%= booking.totalAmount %>
+                </p>
 
-            <p>
-                Booking Status: <%= booking.bookingStatus %>
-            </p>
+                <p>
+                    Booking Status: <%= booking.bookingStatus %>
+                </p>
 
-            <p>
-                Payment Status: <%= booking.paymentStatus %>
-            </p>
+                <p>
+                    Payment Status: <%= booking.paymentStatus %>
+                </p>
 
-            <% if (["Pending", "Confirmed"].includes(booking.bookingStatus)) { %>
+                <% if (
+                    booking.paymentStatus === "Pending" &&
+                    booking.bookingStatus === "Pending" &&
+                    booking.bikeUnit.status === "Available"
+                ) { %>
 
-                <form action="/bookings/<%= booking._id %>/cancel" method="POST">
-                    <button type="submit">Cancel Booking</button>
-                </form>
+                <a href="/bookings/<%= booking._id %>/payment">
+                <button type="button">Complete Payment</button>
+                </a>
 
-            <% } %>
+                <% } %>
 
-        </div>
+                <% if (["Pending", "Confirmed"].includes(booking.bookingStatus)) { %>
 
-        <hr>
+                    <form action="/bookings/<%= booking._id %>/cancel" method="POST">
 
-    <% }) %>
+                        <input
+                            type="hidden"
+                            name="_csrf"
+                            value="<%= csrfToken %>"
+                        >
 
-<% } %>
+                        <button type="submit">Cancel Booking</button>
+
+                    </form>
+
+                <% } %>
+
+            </div>
+
+            <hr>
+
+        <% }) %>
+
+    <% } %>
 
     <br><br>
 
     <form action="/logout" method="POST">
+
+        <input
+            type="hidden"
+            name="_csrf"
+            value="<%= csrfToken %>"
+        >
+
         <button type="submit">Logout</button>
+
     </form>
 
 </body>

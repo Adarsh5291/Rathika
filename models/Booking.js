@@ -51,8 +51,15 @@ const bookingSchema = new mongoose.Schema(
         paymentId: {
             type: String,
             default: ""
+        },
+
+        razorpayOrderId: {
+        type: String,
+        default: ""
         }
     },
+
+
     {
         timestamps: true
     }

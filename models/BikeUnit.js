@@ -1,3 +1,4 @@
+
 const mongoose = require("mongoose");
 
 const bikeUnitSchema = new mongoose.Schema(
@@ -20,6 +21,13 @@ const bikeUnitSchema = new mongoose.Schema(
             type: String,
             enum: ["Available", "Maintenance", "Inactive"],
             default: "Available"
+        },
+
+        // Used to coordinate simultaneous booking attempts
+        allocationVersion: {
+            type: Number,
+            default: 0,
+            select: false
         }
     },
     {

@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,6 +22,12 @@
     <h2>Select Rental Dates</h2>
 
     <form action="/bookings" method="POST">
+
+        <input
+            type="hidden"
+            name="_csrf"
+            value="<%= csrfToken %>"
+        >
 
         <input
             type="hidden"
